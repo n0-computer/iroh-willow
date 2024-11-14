@@ -5784,13 +5784,3 @@ dependencies = [
  "quote",
  "syn 2.0.87",
 ]
-
-[[patch.unused]]
-name = "iroh-docs"
-version = "0.28.0"
-source = "git+https://github.com/n0-computer/iroh-docs?branch=main#9166b226fedc889218986eb6ef2a3d3cdcdee367"
-
-[[patch.unused]]
-name = "iroh-gossip"
-version = "0.28.1"
-source = "git+https://github.com/n0-computer/iroh-gossip?branch=main#3d6659daf326f57cbafec189be996b89c7f441bd"
