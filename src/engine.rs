@@ -1,11 +1,18 @@
 //! Engine for driving a willow store and synchronisation sessions.
 
+use std::sync::{Arc, OnceLock};
+
 use anyhow::Result;
+use futures_lite::future::Boxed;
 use futures_util::{
     future::{MapErr, Shared},
     FutureExt, TryFutureExt,
 };
-use iroh_net::{endpoint::Connection, Endpoint, NodeId};
+use iroh_net::{
+    endpoint::{Connecting, Connection},
+    Endpoint, NodeId,
+};
+use iroh_router::ProtocolHandler;
 use tokio::{
     sync::{mpsc, oneshot},
     task::JoinError,
@@ -14,6 +21,7 @@ use tokio_util::task::AbortOnDropHandle;
 use tracing::{debug, error, error_span, Instrument};
 
 use crate::{
+    rpc::{client::MemClient, handler::RpcHandler},
     session::{
         intents::{Intent, IntentHandle},
         SessionInit,
@@ -39,6 +47,7 @@ const PEER_MANAGER_INBOX_CAP: usize = 128;
 #[derive(Debug, Clone)]
 pub struct Engine {
     actor_handle: ActorHandle,
+    pub(crate) endpoint: Endpoint,
     peer_manager_inbox: mpsc::Sender<peer_manager::Input>,
     // `Engine` needs to be `Clone + Send`, and we need to `task.await` in its `shutdown()` impl.
     // So we need
@@ -47,11 +56,20 @@ pub struct Engine {
     // - `AbortOnDropHandle` to make sure that the `task` is cancelled when all `Node`s are dropped
     //   (`Shared` acts like an `Arc` around its inner future).
     peer_manager_task: Shared<MapErr<AbortOnDropHandle<Result<(), String>>, JoinErrToStr>>,
+    rpc_handler: Arc<OnceLock<crate::rpc::handler::RpcHandler>>,
 }
 
 pub(crate) type JoinErrToStr = Box<dyn Fn(JoinError) -> String + Send + Sync + 'static>;
 
 impl Engine {
+    /// Get an in memory client to interact with the willow engine.
+    pub fn client(&self) -> &MemClient {
+        &self
+            .rpc_handler
+            .get_or_init(|| RpcHandler::new(self.clone()))
+            .client
+    }
+
     /// Start the Willow engine.
     ///
     /// This needs an `endpoint` to connect to other peers, and a `create_store` closure which
@@ -74,8 +92,12 @@ impl Engine {
         let me = endpoint.node_id();
         let actor_handle = ActorHandle::spawn(create_store, me);
         let (pm_inbox_tx, pm_inbox_rx) = mpsc::channel(PEER_MANAGER_INBOX_CAP);
-        let peer_manager =
-            PeerManager::new(actor_handle.clone(), endpoint, pm_inbox_rx, accept_opts);
+        let peer_manager = PeerManager::new(
+            actor_handle.clone(),
+            endpoint.clone(),
+            pm_inbox_rx,
+            accept_opts,
+        );
         let peer_manager_task = tokio::task::spawn(
             async move { peer_manager.run().await.map_err(|e| e.to_string()) }
                 .instrument(error_span!("peer_manager", me=%me.fmt_short())),
@@ -85,8 +107,10 @@ impl Engine {
             .shared();
         Engine {
             actor_handle,
+            endpoint,
             peer_manager_inbox: pm_inbox_tx,
             peer_manager_task,
+            rpc_handler: Default::default(),
         }
     }
 
@@ -146,5 +170,17 @@ impl std::ops::Deref for Engine {
 
     fn deref(&self) -> &Self::Target {
         &self.actor_handle
+    }
+}
+
+impl ProtocolHandler for Engine {
+    fn accept(self: Arc<Self>, conn: Connecting) -> Boxed<Result<()>> {
+        Box::pin(async move { self.handle_connection(conn.await?).await })
+    }
+
+    fn shutdown(self: Arc<Self>) -> Boxed<()> {
+        Box::pin(async move {
+            (&**self).shutdown().await.ok();
+        })
     }
 }

@@ -1,21 +1,23 @@
 use anyhow::Result;
 use futures_lite::Stream;
 use futures_util::{SinkExt, StreamExt};
-use iroh_net::Endpoint;
-use quic_rpc::server::{ChannelTypes, RpcChannel, RpcServerError};
+use quic_rpc::{
+    server::{ChannelTypes, RpcChannel, RpcServerError},
+    RpcClient, RpcServer,
+};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
+use tokio_util::task::AbortOnDropHandle;
 
-use crate::{form::EntryOrForm, rpc::proto::*, Engine};
-
-fn map_err(err: anyhow::Error) -> RpcError {
-    RpcError::new(&*err)
-}
+use crate::{
+    form::EntryOrForm,
+    rpc::{client::MemClient, proto::*},
+    Engine,
+};
 
 impl Engine {
     pub async fn handle_spaces_request<C: ChannelTypes<RpcService>>(
         self,
-        endpoint: Endpoint,
         msg: Request,
         chan: RpcChannel<RpcService, C>,
     ) -> Result<(), RpcServerError<C>> {
@@ -165,20 +167,40 @@ impl Engine {
                 .await
             }
             Addr(msg) => {
-                chan.rpc(msg, endpoint, |endpoint, _req| async move {
-                    let addr = endpoint.node_addr().await.map_err(map_err)?;
+                chan.rpc(msg, self, |engine, _req| async move {
+                    let addr = engine.endpoint.node_addr().await.map_err(map_err)?;
                     Ok(addr)
                 })
                 .await
             }
             AddAddr(msg) => {
-                chan.rpc(msg, endpoint, |endpoint, req| async move {
-                    endpoint.add_node_addr(req.addr).map_err(map_err)?;
+                chan.rpc(msg, self, |engine, req| async move {
+                    engine.endpoint.add_node_addr(req.addr).map_err(map_err)?;
                     Ok(())
                 })
                 .await
             }
         }
+    }
+}
+
+#[derive(derive_more::Debug)]
+pub(crate) struct RpcHandler {
+    /// Client to hand out
+    #[debug("MemClient")]
+    pub(crate) client: MemClient,
+    /// Handler task
+    pub(crate) _handler: AbortOnDropHandle<()>,
+}
+
+impl RpcHandler {
+    pub(crate) fn new(engine: Engine) -> Self {
+        let (listener, connector) = quic_rpc::transport::flume::channel(1);
+        let listener = RpcServer::new(listener);
+        let client = MemClient::new(RpcClient::new(connector));
+        let _handler = listener
+            .spawn_accept_loop(move |req, chan| engine.clone().handle_spaces_request(req, chan));
+        Self { client, _handler }
     }
 }
 
@@ -213,4 +235,8 @@ async fn sync_with_peer(
         }
     });
     Ok(())
+}
+
+fn map_err(err: anyhow::Error) -> RpcError {
+    RpcError::new(&*err)
 }
