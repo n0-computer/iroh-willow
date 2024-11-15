@@ -54,7 +54,7 @@ pub enum Input {
 #[derive(Debug)]
 pub enum Output {
     SendMessage(SetupBindAreaOfInterest),
-    SubmitAuthorisation(ReadAuthorisation),
+    SubmitAuthorisation(Box<ReadAuthorisation>),
     AoiIntersection(AoiIntersection),
     SignAndSendCapability {
         handle: IntersectionHandle,
@@ -133,7 +133,7 @@ impl IntersectionFinder {
                     // The authorisation is new. Submit to the PaiFinder.
                     entry.insert(aois);
                     self.co
-                        .yield_(Output::SubmitAuthorisation(authorisation))
+                        .yield_(Output::SubmitAuthorisation(Box::new(authorisation)))
                         .await;
                 }
             }

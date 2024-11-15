@@ -46,14 +46,14 @@ pub enum PaiError {
 
 #[derive(Debug)]
 pub struct PaiIntersection {
-    pub authorisation: ReadAuthorisation,
+    pub authorisation: Box<ReadAuthorisation>, // Boxing due to size
     pub handle: IntersectionHandle,
 }
 
 #[derive(Debug)]
 pub enum Input {
     Established,
-    SubmitAuthorisation(ReadAuthorisation),
+    SubmitAuthorisation(Box<ReadAuthorisation>),
     ReceivedMessage(Result<IntersectionMessage, Error>),
     ReceivedSubspaceCapRequest(IntersectionHandle),
     ReceivedVerifiedSubspaceCapReply(IntersectionHandle, NamespaceId),
@@ -76,8 +76,8 @@ pub struct PaiFinder {
     our_intersection_handles: ResourceMap<IntersectionHandle, GroupState>,
     their_intersection_handles: ResourceMap<IntersectionHandle, GroupState>,
     requested_subspace_cap_handles: HashSet<IntersectionHandle>,
-    submitted: HashSet<ReadAuthorisation>,
-    pending: Option<HashSet<ReadAuthorisation>>,
+    submitted: HashSet<Box<ReadAuthorisation>>,
+    pending: Option<HashSet<Box<ReadAuthorisation>>>,
 }
 
 impl PaiFinder {
@@ -163,7 +163,7 @@ impl PaiFinder {
         Ok(())
     }
 
-    async fn submit_authorisation(&mut self, authorisation: ReadAuthorisation) {
+    async fn submit_authorisation(&mut self, authorisation: Box<ReadAuthorisation>) {
         if !self.submitted.insert(authorisation.clone()) {
             return;
         }
@@ -211,7 +211,7 @@ impl PaiFinder {
 
     async fn submit_fragment(
         &mut self,
-        authorisation: ReadAuthorisation,
+        authorisation: Box<ReadAuthorisation>,
         fragment: Fragment,
         kind: FragmentKind,
         is_most_specific: bool,
@@ -382,7 +382,7 @@ impl PaiFinder {
 #[derive(Debug)]
 pub struct LocalFragmentInfo {
     on_intersection: OnIntersection,
-    authorisation: ReadAuthorisation,
+    authorisation: Box<ReadAuthorisation>,
     namespace_id: NamespaceId,
     // will be needed for spec-compliant encodings of read capabilities
     #[allow(dead_code)]
@@ -394,7 +394,7 @@ pub struct LocalFragmentInfo {
 
 impl LocalFragmentInfo {
     fn new(
-        authorisation: ReadAuthorisation,
+        authorisation: Box<ReadAuthorisation>,
         fragment: Fragment,
         kind: FragmentKind,
         is_most_specific: bool,
@@ -538,16 +538,16 @@ mod tests {
 
         let (mut alfie, mut betty) = Handle::create_two();
 
-        alfie.submit(auth_alfie.clone()).await;
-        betty.submit(auth_betty.clone()).await;
+        alfie.submit(Box::new(auth_alfie.clone())).await;
+        betty.submit(Box::new(auth_betty.clone())).await;
 
         transfer::<PaiBindFragment>(&mut alfie, &betty).await;
         transfer::<PaiBindFragment>(&mut betty, &alfie).await;
         transfer::<PaiReplyFragment>(&mut alfie, &betty).await;
         transfer::<PaiReplyFragment>(&mut betty, &alfie).await;
 
-        assert_eq!(alfie.next_intersection().await.authorisation, auth_alfie);
-        assert_eq!(betty.next_intersection().await.authorisation, auth_betty);
+        assert_eq!(&*alfie.next_intersection().await.authorisation, &auth_alfie);
+        assert_eq!(&*betty.next_intersection().await.authorisation, &auth_betty);
 
         alfie.join().await;
         betty.join().await;
@@ -591,8 +591,8 @@ mod tests {
 
         let (mut alfie, mut betty) = Handle::create_two();
 
-        alfie.submit(alfie_auth.clone()).await;
-        betty.submit(betty_auth.clone()).await;
+        alfie.submit(Box::new(alfie_auth.clone())).await;
+        betty.submit(Box::new(betty_auth.clone())).await;
 
         transfer::<PaiBindFragment>(&mut alfie, &betty).await;
         transfer::<PaiBindFragment>(&mut betty, &alfie).await;
@@ -623,13 +623,13 @@ mod tests {
             .await;
 
         let next = alfie.next_intersection().await;
-        assert_eq!(next.authorisation, alfie_auth);
+        assert_eq!(&*next.authorisation, &alfie_auth);
         betty
             .input(Input::ReceivedReadCapForIntersection(next.handle))
             .await;
 
         let next = betty.next_intersection().await;
-        assert_eq!(next.authorisation, betty_auth);
+        assert_eq!(&*next.authorisation, &betty_auth);
 
         alfie.join().await;
         betty.join().await;
@@ -685,7 +685,7 @@ mod tests {
             self.input.send(input).await.unwrap();
         }
 
-        pub async fn submit(&self, auth: ReadAuthorisation) {
+        pub async fn submit(&self, auth: Box<ReadAuthorisation>) {
             self.input(Input::SubmitAuthorisation(auth)).await
         }
 

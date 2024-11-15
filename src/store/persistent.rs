@@ -261,19 +261,16 @@ impl WillowSnapshot {
         Ok(either::Right(
             ns_node
                 .split_range_owned(to_query(range), split_factor, self.clone())
-                .map({
-                    let ns_node = ns_node;
-                    move |result| {
-                        let (range, count) = result?;
-                        if count <= max_set_size {
-                            Ok((to_range3d(range)?, traits::SplitAction::SendEntries(count)))
-                        } else {
-                            let fingerprint = ns_node.range_summary(&range, &self)?;
-                            Ok((
-                                to_range3d(range)?,
-                                traits::SplitAction::SendFingerprint(fingerprint),
-                            ))
-                        }
+                .map(move |result| {
+                    let (range, count) = result?;
+                    if count <= max_set_size {
+                        Ok((to_range3d(range)?, traits::SplitAction::SendEntries(count)))
+                    } else {
+                        let fingerprint = ns_node.range_summary(&range, &self)?;
+                        Ok((
+                            to_range3d(range)?,
+                            traits::SplitAction::SendFingerprint(fingerprint),
+                        ))
                     }
                 }),
         ))
