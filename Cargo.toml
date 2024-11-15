@@ -36,7 +36,7 @@ iroh-net = { version = "0.28.0" }
 meadowcap = "0.1.0"
 nested_enum_utils = "0.1.0"
 postcard = { version = "1", default-features = false, features = [ "alloc", "use-std", "experimental-derive", ] }
-quic-rpc = "0.15.0"
+quic-rpc = "0.15.1"
 quic-rpc-derive = "0.15.0"
 rand = "0.8.5"
 rand_core = "0.6.4"

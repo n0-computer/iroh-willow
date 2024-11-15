@@ -47,28 +47,43 @@ use crate::{
     store::traits::{StoreEvent, SubscribeParams},
 };
 
+/// Type alias for a memory-backed client.
+pub type MemClient = Client<
+    quic_rpc::transport::flume::FlumeConnector<
+        crate::rpc::proto::Response,
+        crate::rpc::proto::Request,
+    >,
+>;
+
 /// Iroh Willow client.
 #[derive(Debug, Clone, RefCast)]
 #[repr(transparent)]
 pub struct Client<C: quic_rpc::Connector<RpcService> = quic_rpc::client::BoxedConnector<RpcService>>
-where
-    C: ConnectionErrors<SendError = anyhow::Error>,
 {
     pub(super) rpc: RpcClient<C>,
 }
 
-impl<C: quic_rpc::Connector<RpcService>> Client<C>
-where
-    C: ConnectionErrors<SendError = anyhow::Error>,
-{
+impl<C: quic_rpc::Connector<RpcService>> Client<C> {
     pub fn new(rpc: RpcClient<C>) -> Self {
         Self { rpc }
+    }
+
+    pub fn boxed(self) -> Client<quic_rpc::client::BoxedConnector<RpcService>>
+    where
+        C: quic_rpc::transport::boxed::BoxableConnector<
+            crate::rpc::proto::Response,
+            crate::rpc::proto::Request,
+        >,
+    {
+        Client {
+            rpc: self.rpc.boxed(),
+        }
     }
 
     /// Create a new namespace in the Willow store.
     pub async fn create(&self, kind: NamespaceKind, owner: UserId) -> Result<Space<C>> {
         let req = CreateNamespaceRequest { kind, owner };
-        let res = self.rpc.rpc(req).await??;
+        let res = self.rpc.rpc(req).await.map_err(|e| anyhow::anyhow!(e))??;
         Ok(Space::new(self.rpc.clone(), res.0))
     }
 
@@ -138,11 +153,11 @@ where
         let req = SyncWithPeerRequest { peer, init };
         let (update_tx, event_rx) = self.rpc.bidi(req).await?;
 
-        let update_tx = SinkExt::with(
-            update_tx,
-            |update| async move { Ok(SyncWithPeerUpdate(update)) },
+        let update_tx: UpdateSender = Box::pin(
+            update_tx
+                .with(|update| async move { Ok(SyncWithPeerUpdate(update)) })
+                .sink_map_err(|e: <C as ConnectionErrors>::SendError| e.into()),
         );
-        let update_tx: UpdateSender = Box::pin(update_tx);
 
         let event_rx = Box::pin(event_rx.map(|res| match res {
             Ok(Ok(SyncWithPeerResponse::Event(event))) => event,
@@ -187,17 +202,12 @@ where
 /// A space to store entries in.
 #[derive(Debug, Clone)]
 pub struct Space<C: quic_rpc::Connector<RpcService> = quic_rpc::client::BoxedConnector<RpcService>>
-where
-    C: ConnectionErrors<SendError = anyhow::Error>,
 {
     rpc: RpcClient<C>,
     namespace_id: NamespaceId,
 }
 
-impl<C: quic_rpc::Connector<RpcService>> Space<C>
-where
-    C: ConnectionErrors<SendError = anyhow::Error>,
-{
+impl<C: quic_rpc::Connector<RpcService>> Space<C> {
     fn new(rpc: RpcClient<C>, namespace_id: NamespaceId) -> Self {
         Self { rpc, namespace_id }
     }

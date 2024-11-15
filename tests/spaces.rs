@@ -13,16 +13,12 @@ use iroh_willow::{
         keys::{NamespaceKind, UserId},
         meadowcap::AccessMode,
     },
-    rpc::{
-        client::{Client, EntryForm, Space},
-        proto::RpcService,
-    },
+    rpc::client::{Client, EntryForm, Space},
     session::{intents::Completion, SessionMode},
     store::traits::{EntryOrigin, StoreEvent},
     Engine,
 };
 use proptest::{collection::vec, prelude::Strategy, sample::select};
-use quic_rpc::RpcServer;
 use test_strategy::proptest;
 use testresult::TestResult;
 use tokio::task::JoinSet;
@@ -66,16 +62,8 @@ async fn spawn_node(
                     AcceptOpts::default(),
                 )
             };
-            let (rpc, controller) = quic_rpc::transport::flume::channel::<
-                iroh_willow::rpc::proto::Request,
-                iroh_willow::rpc::proto::Response,
-            >(32);
-            let rpc = quic_rpc::transport::boxed::BoxedListener::new(rpc);
-            let controller = quic_rpc::transport::boxed::BoxedConnector::new(controller);
-            let client =
-                iroh_willow::rpc::client::Client::new(quic_rpc::RpcClient::new(controller.clone()));
 
-            let rpc = RpcServer::<RpcService>::new(rpc);
+            let client = engine.client().clone().boxed();
 
             // wait for direct addresses
             // endpoint.direct_addresses().next().await;
@@ -93,24 +81,6 @@ async fn spawn_node(
                     biased;
                     _ = cancel_token.cancelled() => {
                         break;
-                    },
-                    request = rpc.accept() => {
-                        match request {
-                            Ok(accepting) => {
-                                tasks.spawn({
-                                    let engine = engine.clone();
-                                    let endpoint = endpoint.clone();
-                                    async move {
-                                        let (msg, chan) = accepting.read_first().await?;
-                                        engine.handle_spaces_request(endpoint, msg, chan).await?;
-                                        anyhow::Ok(())
-                                    }
-                                });
-                            }
-                            Err(e) => {
-                                tracing::warn!("RPC request error: {e:?}");
-                            }
-                        }
                     },
                     Some(incoming) = endpoint.accept() => {
                         tasks.spawn({
