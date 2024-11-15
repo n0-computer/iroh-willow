@@ -177,7 +177,7 @@
     }
 
     <span class="kw">fn </span>combine(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>slf = <span class="self">self</span>.clone();
+        <span class="kw">let </span><span class="kw-2">mut </span>slf = <span class="kw-2">*</span><span class="self">self</span>;
         slf ^= <span class="kw-2">*</span>other;
         slf
     }

@@ -330,7 +330,7 @@
             auth_tokens: tx.open_table(AUTH_TOKENS)<span class="question-mark">?</span>,
             read_caps: tx.open_multimap_table(READ_CAPS)<span class="question-mark">?</span>,
             write_caps: tx.open_multimap_table(WRITE_CAPS)<span class="question-mark">?</span>,
-            node_store: willow_store::Snapshot::open(<span class="kw-2">&amp;</span>tx)<span class="question-mark">?</span>,
+            node_store: willow_store::Snapshot::open(tx)<span class="question-mark">?</span>,
         })
     }
 }

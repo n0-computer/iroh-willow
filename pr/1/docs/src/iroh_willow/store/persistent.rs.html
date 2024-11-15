@@ -850,7 +850,7 @@
     ///
     /// The file will be created if it does not exist, otherwise it will be opened.
     </span><span class="kw">pub fn </span>persistent(path: <span class="kw">impl </span>AsRef&lt;std::path::Path&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>db = Database::create(<span class="kw-2">&amp;</span>path.as_ref())<span class="question-mark">?</span>;
+        <span class="kw">let </span>db = Database::create(path.as_ref())<span class="question-mark">?</span>;
         <span class="self">Self</span>::new_impl(db)
     }
 
@@ -1015,9 +1015,9 @@
 
         <span class="prelude-val">Ok</span>(either::Right(
             ns_node
-                .split_range_owned(to_query(<span class="kw-2">&amp;</span>range), split_factor, <span class="self">self</span>.clone())
+                .split_range_owned(to_query(range), split_factor, <span class="self">self</span>.clone())
                 .map({
-                    <span class="kw">let </span>ns_node = ns_node.clone();
+                    <span class="kw">let </span>ns_node = ns_node;
                     <span class="kw">move </span>|result| {
                         <span class="kw">let </span>(range, count) = result<span class="question-mark">?</span>;
                         <span class="kw">if </span>count &lt;= max_set_size {
