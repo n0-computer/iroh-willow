@@ -66,7 +66,7 @@ impl LiftingCommutativeMonoid<PointRef<IrohWillowParams>, StoredAuthorisedEntry>
     }
 
     fn combine(&self, other: &Self) -> Self {
-        let mut slf = self.clone();
+        let mut slf = *self;
         slf ^= *other;
         slf
     }
