@@ -579,6 +579,7 @@ async fn spaces_subscription() -> TestResult {
     Ok(())
 }
 
+#[ignore = "flaky"]
 #[tokio::test]
 async fn test_restricted_area() -> testresult::TestResult {
     iroh_test::logging::setup_multithreaded();

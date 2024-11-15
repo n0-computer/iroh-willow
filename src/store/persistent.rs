@@ -95,7 +95,7 @@ impl WillowStore {
     ///
     /// The file will be created if it does not exist, otherwise it will be opened.
     pub fn persistent(path: impl AsRef<std::path::Path>) -> Result<Self> {
-        let db = Database::create(&path.as_ref())?;
+        let db = Database::create(path.as_ref())?;
         Self::new_impl(db)
     }
 
@@ -260,20 +260,17 @@ impl WillowSnapshot {
 
         Ok(either::Right(
             ns_node
-                .split_range_owned(to_query(&range), split_factor, self.clone())
-                .map({
-                    let ns_node = ns_node.clone();
-                    move |result| {
-                        let (range, count) = result?;
-                        if count <= max_set_size {
-                            Ok((to_range3d(range)?, traits::SplitAction::SendEntries(count)))
-                        } else {
-                            let fingerprint = ns_node.range_summary(&range, &self)?;
-                            Ok((
-                                to_range3d(range)?,
-                                traits::SplitAction::SendFingerprint(fingerprint),
-                            ))
-                        }
+                .split_range_owned(to_query(range), split_factor, self.clone())
+                .map(move |result| {
+                    let (range, count) = result?;
+                    if count <= max_set_size {
+                        Ok((to_range3d(range)?, traits::SplitAction::SendEntries(count)))
+                    } else {
+                        let fingerprint = ns_node.range_summary(&range, &self)?;
+                        Ok((
+                            to_range3d(range)?,
+                            traits::SplitAction::SendFingerprint(fingerprint),
+                        ))
                     }
                 }),
         ))

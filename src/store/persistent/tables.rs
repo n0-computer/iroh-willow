@@ -115,7 +115,7 @@ impl OpenRead {
             auth_tokens: tx.open_table(AUTH_TOKENS)?,
             read_caps: tx.open_multimap_table(READ_CAPS)?,
             write_caps: tx.open_multimap_table(WRITE_CAPS)?,
-            node_store: willow_store::Snapshot::open(&tx)?,
+            node_store: willow_store::Snapshot::open(tx)?,
         })
     }
 }
