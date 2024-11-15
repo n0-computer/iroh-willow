@@ -776,14 +776,14 @@
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>PaiIntersection {
-    <span class="kw">pub </span>authorisation: ReadAuthorisation,
-    <span class="kw">pub </span>handle: IntersectionHandle,
+    <span class="kw">pub </span>authorisation: Box&lt;ReadAuthorisation&gt;, <span class="comment">// Boxing due to size
+    </span><span class="kw">pub </span>handle: IntersectionHandle,
 }
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>Input {
     Established,
-    SubmitAuthorisation(ReadAuthorisation),
+    SubmitAuthorisation(Box&lt;ReadAuthorisation&gt;),
     ReceivedMessage(<span class="prelude-ty">Result</span>&lt;IntersectionMessage, Error&gt;),
     ReceivedSubspaceCapRequest(IntersectionHandle),
     ReceivedVerifiedSubspaceCapReply(IntersectionHandle, NamespaceId),
@@ -806,8 +806,8 @@
     our_intersection_handles: ResourceMap&lt;IntersectionHandle, GroupState&gt;,
     their_intersection_handles: ResourceMap&lt;IntersectionHandle, GroupState&gt;,
     requested_subspace_cap_handles: HashSet&lt;IntersectionHandle&gt;,
-    submitted: HashSet&lt;ReadAuthorisation&gt;,
-    pending: <span class="prelude-ty">Option</span>&lt;HashSet&lt;ReadAuthorisation&gt;&gt;,
+    submitted: HashSet&lt;Box&lt;ReadAuthorisation&gt;&gt;,
+    pending: <span class="prelude-ty">Option</span>&lt;HashSet&lt;Box&lt;ReadAuthorisation&gt;&gt;&gt;,
 }
 
 <span class="kw">impl </span>PaiFinder {
@@ -893,7 +893,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">async fn </span>submit_authorisation(<span class="kw-2">&amp;mut </span><span class="self">self</span>, authorisation: ReadAuthorisation) {
+    <span class="kw">async fn </span>submit_authorisation(<span class="kw-2">&amp;mut </span><span class="self">self</span>, authorisation: Box&lt;ReadAuthorisation&gt;) {
         <span class="kw">if </span>!<span class="self">self</span>.submitted.insert(authorisation.clone()) {
             <span class="kw">return</span>;
         }
@@ -941,7 +941,7 @@
 
     <span class="kw">async fn </span>submit_fragment(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        authorisation: ReadAuthorisation,
+        authorisation: Box&lt;ReadAuthorisation&gt;,
         fragment: Fragment,
         kind: FragmentKind,
         is_most_specific: bool,
@@ -1112,7 +1112,7 @@
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>LocalFragmentInfo {
     on_intersection: OnIntersection,
-    authorisation: ReadAuthorisation,
+    authorisation: Box&lt;ReadAuthorisation&gt;,
     namespace_id: NamespaceId,
     <span class="comment">// will be needed for spec-compliant encodings of read capabilities
     </span><span class="attr">#[allow(dead_code)]
@@ -1124,7 +1124,7 @@
 
 <span class="kw">impl </span>LocalFragmentInfo {
     <span class="kw">fn </span>new(
-        authorisation: ReadAuthorisation,
+        authorisation: Box&lt;ReadAuthorisation&gt;,
         fragment: Fragment,
         kind: FragmentKind,
         is_most_specific: bool,
@@ -1268,16 +1268,16 @@
 
         <span class="kw">let </span>(<span class="kw-2">mut </span>alfie, <span class="kw-2">mut </span>betty) = Handle::create_two();
 
-        alfie.submit(auth_alfie.clone()).<span class="kw">await</span>;
-        betty.submit(auth_betty.clone()).<span class="kw">await</span>;
+        alfie.submit(Box::new(auth_alfie.clone())).<span class="kw">await</span>;
+        betty.submit(Box::new(auth_betty.clone())).<span class="kw">await</span>;
 
         transfer::&lt;PaiBindFragment&gt;(<span class="kw-2">&amp;mut </span>alfie, <span class="kw-2">&amp;</span>betty).<span class="kw">await</span>;
         transfer::&lt;PaiBindFragment&gt;(<span class="kw-2">&amp;mut </span>betty, <span class="kw-2">&amp;</span>alfie).<span class="kw">await</span>;
         transfer::&lt;PaiReplyFragment&gt;(<span class="kw-2">&amp;mut </span>alfie, <span class="kw-2">&amp;</span>betty).<span class="kw">await</span>;
         transfer::&lt;PaiReplyFragment&gt;(<span class="kw-2">&amp;mut </span>betty, <span class="kw-2">&amp;</span>alfie).<span class="kw">await</span>;
 
-        <span class="macro">assert_eq!</span>(alfie.next_intersection().<span class="kw">await</span>.authorisation, auth_alfie);
-        <span class="macro">assert_eq!</span>(betty.next_intersection().<span class="kw">await</span>.authorisation, auth_betty);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;*</span>alfie.next_intersection().<span class="kw">await</span>.authorisation, <span class="kw-2">&amp;</span>auth_alfie);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;*</span>betty.next_intersection().<span class="kw">await</span>.authorisation, <span class="kw-2">&amp;</span>auth_betty);
 
         alfie.join().<span class="kw">await</span>;
         betty.join().<span class="kw">await</span>;
@@ -1321,8 +1321,8 @@
 
         <span class="kw">let </span>(<span class="kw-2">mut </span>alfie, <span class="kw-2">mut </span>betty) = Handle::create_two();
 
-        alfie.submit(alfie_auth.clone()).<span class="kw">await</span>;
-        betty.submit(betty_auth.clone()).<span class="kw">await</span>;
+        alfie.submit(Box::new(alfie_auth.clone())).<span class="kw">await</span>;
+        betty.submit(Box::new(betty_auth.clone())).<span class="kw">await</span>;
 
         transfer::&lt;PaiBindFragment&gt;(<span class="kw-2">&amp;mut </span>alfie, <span class="kw-2">&amp;</span>betty).<span class="kw">await</span>;
         transfer::&lt;PaiBindFragment&gt;(<span class="kw-2">&amp;mut </span>betty, <span class="kw-2">&amp;</span>alfie).<span class="kw">await</span>;
@@ -1353,13 +1353,13 @@
             .<span class="kw">await</span>;
 
         <span class="kw">let </span>next = alfie.next_intersection().<span class="kw">await</span>;
-        <span class="macro">assert_eq!</span>(next.authorisation, alfie_auth);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;*</span>next.authorisation, <span class="kw-2">&amp;</span>alfie_auth);
         betty
             .input(Input::ReceivedReadCapForIntersection(next.handle))
             .<span class="kw">await</span>;
 
         <span class="kw">let </span>next = betty.next_intersection().<span class="kw">await</span>;
-        <span class="macro">assert_eq!</span>(next.authorisation, betty_auth);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;*</span>next.authorisation, <span class="kw-2">&amp;</span>betty_auth);
 
         alfie.join().<span class="kw">await</span>;
         betty.join().<span class="kw">await</span>;
@@ -1415,7 +1415,7 @@
             <span class="self">self</span>.input.send(input).<span class="kw">await</span>.unwrap();
         }
 
-        <span class="kw">pub async fn </span>submit(<span class="kw-2">&amp;</span><span class="self">self</span>, auth: ReadAuthorisation) {
+        <span class="kw">pub async fn </span>submit(<span class="kw-2">&amp;</span><span class="self">self</span>, auth: Box&lt;ReadAuthorisation&gt;) {
             <span class="self">self</span>.input(Input::SubmitAuthorisation(auth)).<span class="kw">await
         </span>}
 

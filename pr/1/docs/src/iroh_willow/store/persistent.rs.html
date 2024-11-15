@@ -750,9 +750,6 @@
 <a href="#750" id="750">750</a>
 <a href="#751" id="751">751</a>
 <a href="#752" id="752">752</a>
-<a href="#753" id="753">753</a>
-<a href="#754" id="754">754</a>
-<a href="#755" id="755">755</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     cell::{Ref, RefCell, RefMut},
     collections::HashMap,
@@ -1016,19 +1013,16 @@
         <span class="prelude-val">Ok</span>(either::Right(
             ns_node
                 .split_range_owned(to_query(range), split_factor, <span class="self">self</span>.clone())
-                .map({
-                    <span class="kw">let </span>ns_node = ns_node;
-                    <span class="kw">move </span>|result| {
-                        <span class="kw">let </span>(range, count) = result<span class="question-mark">?</span>;
-                        <span class="kw">if </span>count &lt;= max_set_size {
-                            <span class="prelude-val">Ok</span>((to_range3d(range)<span class="question-mark">?</span>, traits::SplitAction::SendEntries(count)))
-                        } <span class="kw">else </span>{
-                            <span class="kw">let </span>fingerprint = ns_node.range_summary(<span class="kw-2">&amp;</span>range, <span class="kw-2">&amp;</span><span class="self">self</span>)<span class="question-mark">?</span>;
-                            <span class="prelude-val">Ok</span>((
-                                to_range3d(range)<span class="question-mark">?</span>,
-                                traits::SplitAction::SendFingerprint(fingerprint),
-                            ))
-                        }
+                .map(<span class="kw">move </span>|result| {
+                    <span class="kw">let </span>(range, count) = result<span class="question-mark">?</span>;
+                    <span class="kw">if </span>count &lt;= max_set_size {
+                        <span class="prelude-val">Ok</span>((to_range3d(range)<span class="question-mark">?</span>, traits::SplitAction::SendEntries(count)))
+                    } <span class="kw">else </span>{
+                        <span class="kw">let </span>fingerprint = ns_node.range_summary(<span class="kw-2">&amp;</span>range, <span class="kw-2">&amp;</span><span class="self">self</span>)<span class="question-mark">?</span>;
+                        <span class="prelude-val">Ok</span>((
+                            to_range3d(range)<span class="question-mark">?</span>,
+                            traits::SplitAction::SendFingerprint(fingerprint),
+                        ))
                     }
                 }),
         ))

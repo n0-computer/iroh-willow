@@ -299,7 +299,7 @@
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>Output {
     SendMessage(SetupBindAreaOfInterest),
-    SubmitAuthorisation(ReadAuthorisation),
+    SubmitAuthorisation(Box&lt;ReadAuthorisation&gt;),
     AoiIntersection(AoiIntersection),
     SignAndSendCapability {
         handle: IntersectionHandle,
@@ -378,7 +378,7 @@
                     <span class="comment">// The authorisation is new. Submit to the PaiFinder.
                     </span>entry.insert(aois);
                     <span class="self">self</span>.co
-                        .yield_(Output::SubmitAuthorisation(authorisation))
+                        .yield_(Output::SubmitAuthorisation(Box::new(authorisation)))
                         .<span class="kw">await</span>;
                 }
             }
