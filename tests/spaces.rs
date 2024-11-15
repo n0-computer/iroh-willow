@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, time::Duration};
+use std::{collections::BTreeMap, sync::Arc, time::Duration};
 
 use anyhow::ensure;
 use futures_lite::StreamExt;
@@ -21,134 +21,60 @@ use iroh_willow::{
 use proptest::{collection::vec, prelude::Strategy, sample::select};
 use test_strategy::proptest;
 use testresult::TestResult;
-use tokio::task::JoinSet;
-use tokio_util::sync::{CancellationToken, DropGuard};
 use tracing::{error, info};
 
 /// Spawn an iroh node in a separate thread and tokio runtime, and return
 /// the address and client.
 async fn spawn_node(
     persist_test_mode: bool,
-) -> (NodeAddr, Client, iroh_blobs::store::mem::Store, DropGuard) {
-    let (sender, receiver) = tokio::sync::oneshot::channel();
-    std::thread::spawn(move || {
-        let runtime = tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()?;
-        runtime.block_on(async move {
-            let blobs_store = iroh_blobs::store::mem::Store::default();
-            let secret_key = SecretKey::generate();
-            let endpoint = Endpoint::builder()
-                .secret_key(secret_key)
-                .alpns(vec![iroh_willow::ALPN.to_vec()])
-                .relay_mode(iroh_net::RelayMode::Disabled)
-                .bind()
-                .await?;
+) -> (
+    NodeAddr,
+    Client,
+    iroh_blobs::store::mem::Store,
+    iroh_router::Router,
+) {
+    let blobs_store = iroh_blobs::store::mem::Store::default();
 
-            let store = blobs_store.clone();
-            let engine = if persist_test_mode {
-                Engine::spawn(
-                    endpoint.clone(),
-                    move || {
-                        iroh_willow::store::persistent::Store::new_memory(store)
-                            .expect("couldn't initialize store")
-                    },
-                    AcceptOpts::default(),
-                )
-            } else {
-                Engine::spawn(
-                    endpoint.clone(),
-                    move || iroh_willow::store::memory::Store::new(store),
-                    AcceptOpts::default(),
-                )
-            };
+    let secret_key = SecretKey::generate();
+    let endpoint = Endpoint::builder()
+        .secret_key(secret_key)
+        .alpns(vec![iroh_willow::ALPN.to_vec()])
+        .relay_mode(iroh_net::RelayMode::Disabled)
+        .bind()
+        .await
+        .unwrap();
 
-            let client = engine.client().clone().boxed();
+    let store = blobs_store.clone();
+    let engine = if persist_test_mode {
+        Engine::spawn(
+            endpoint.clone(),
+            move || {
+                iroh_willow::store::persistent::Store::new_memory(store)
+                    .expect("couldn't initialize store")
+            },
+            AcceptOpts::default(),
+        )
+    } else {
+        Engine::spawn(
+            endpoint.clone(),
+            move || iroh_willow::store::memory::Store::new(store),
+            AcceptOpts::default(),
+        )
+    };
 
-            // wait for direct addresses
-            // endpoint.direct_addresses().next().await;
-            let addr = endpoint.node_addr().await?;
+    let client = engine.client().clone().boxed();
 
-            let cancel_token = CancellationToken::new();
-            sender
-                .send((addr, client, blobs_store, cancel_token.clone().drop_guard()))
-                .unwrap();
+    // wait for direct addresses
+    // endpoint.direct_addresses().next().await;
+    let addr = endpoint.node_addr().await.unwrap();
 
-            let mut tasks = JoinSet::new();
+    let router = iroh_router::Router::builder(endpoint.clone())
+        .accept(iroh_willow::ALPN.to_vec(), Arc::new(engine.clone()))
+        .spawn()
+        .await
+        .unwrap();
 
-            loop {
-                tokio::select! {
-                    biased;
-                    _ = cancel_token.cancelled() => {
-                        break;
-                    },
-                    Some(incoming) = endpoint.accept() => {
-                        tasks.spawn({
-                            let engine = engine.clone();
-                            async move {
-                                let mut connecting = match incoming.accept() {
-                                    Ok(conn) => conn,
-                                    Err(err) => {
-                                        tracing::warn!("Ignoring iroh-net connection: accept failed: {err:#}");
-                                        return Ok(());
-                                    }
-                                };
-                                let alpn = match connecting.alpn().await {
-                                    Ok(alpn) => alpn,
-                                    Err(err) => {
-                                        tracing::warn!("Ignoring connection: Invalid handshake: {err:#}");
-                                        return Ok(());
-                                    }
-                                };
-                                if alpn != iroh_willow::ALPN {
-                                    tracing::warn!("Ignoring connection: ALPN is not willow ({})", hex::encode(alpn));
-                                    return Ok(());
-                                }
-                                let conn = match connecting.await {
-                                    Ok(conn) => conn,
-                                    Err(err) => {
-                                        tracing::warn!("Ignoring connection: Failed to connect: {err:#}");
-                                        return Ok(());
-                                    }
-                                };
-
-                                if let Err(err) = engine.handle_connection(conn).await {
-                                    tracing::warn!("Handling incoming connection ended with error: {err}");
-                                }
-
-                                anyhow::Ok(())
-                            }
-                        });
-                    },
-                    res = tasks.join_next(), if !tasks.is_empty() => {
-                        match res {
-                            Some(Err(outer)) => {
-                                if outer.is_panic() {
-                                    tracing::error!("Task panicked: {outer:?}");
-                                    break;
-                                } else if outer.is_cancelled() {
-                                    tracing::debug!("Task cancelled: {outer:?}");
-                                } else {
-                                    tracing::error!("Task failed: {outer:?}");
-                                    break;
-                                }
-                            }
-                            Some(Ok(Err(inner))) => {
-                                tracing::debug!("Task errored: {inner:?}");
-                            }
-                            _ => {}
-                        }
-                    },
-                }
-            }
-
-            engine.shutdown().await?;
-
-            anyhow::Ok(())
-        })?;
-        anyhow::Ok(())
-    });
-    receiver.await.unwrap()
+    (addr, client, blobs_store, router)
 }
 
 #[derive(Debug, Clone)]

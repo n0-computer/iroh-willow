@@ -2282,6 +2282,7 @@ dependencies = [
  "iroh-io",
  "iroh-metrics",
  "iroh-net",
+ "iroh-router",
  "iroh-test",
  "meadowcap",
  "nested_enum_utils",

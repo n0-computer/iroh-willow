@@ -3,11 +3,16 @@
 use std::sync::{Arc, OnceLock};
 
 use anyhow::Result;
+use futures_lite::future::Boxed;
 use futures_util::{
     future::{MapErr, Shared},
     FutureExt, TryFutureExt,
 };
-use iroh_net::{endpoint::Connection, Endpoint, NodeId};
+use iroh_net::{
+    endpoint::{Connecting, Connection},
+    Endpoint, NodeId,
+};
+use iroh_router::ProtocolHandler;
 use tokio::{
     sync::{mpsc, oneshot},
     task::JoinError,
@@ -165,5 +170,17 @@ impl std::ops::Deref for Engine {
 
     fn deref(&self) -> &Self::Target {
         &self.actor_handle
+    }
+}
+
+impl ProtocolHandler for Engine {
+    fn accept(self: Arc<Self>, conn: Connecting) -> Boxed<Result<()>> {
+        Box::pin(async move { self.handle_connection(conn.await?).await })
+    }
+
+    fn shutdown(self: Arc<Self>) -> Boxed<()> {
+        Box::pin(async move {
+            (&**self).shutdown().await.ok();
+        })
     }
 }
