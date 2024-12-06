@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use futures_buffered::join_all;
 use futures_lite::{future::Boxed, StreamExt};
 use futures_util::{FutureExt, TryFutureExt};
-use iroh_net::{
+use iroh::{
     endpoint::{get_remote_node_id, Connection, ConnectionError},
     Endpoint, NodeId,
 };

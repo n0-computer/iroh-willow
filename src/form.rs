@@ -5,11 +5,10 @@ use std::{io, path::PathBuf};
 
 use bytes::Bytes;
 use futures_lite::Stream;
-use iroh_base::hash::Hash;
 use iroh_blobs::{
     store::{ImportMode, MapEntry},
     util::progress::IgnoreProgressSender,
-    BlobFormat,
+    BlobFormat, Hash,
 };
 use serde::{Deserialize, Serialize};
 use tokio::io::AsyncRead;

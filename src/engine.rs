@@ -8,11 +8,11 @@ use futures_util::{
     future::{MapErr, Shared},
     FutureExt, TryFutureExt,
 };
-use iroh_net::{
+use iroh::{
     endpoint::{Connecting, Connection},
+    protocol::ProtocolHandler,
     Endpoint, NodeId,
 };
-use iroh_router::ProtocolHandler;
 use tokio::{
     sync::{mpsc, oneshot},
     task::JoinError,

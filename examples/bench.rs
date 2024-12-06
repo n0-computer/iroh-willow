@@ -98,7 +98,7 @@ mod util {
     use anyhow::Result;
     use bytes::Bytes;
     use futures_concurrency::future::TryJoin;
-    use iroh_net::{Endpoint, NodeId};
+    use iroh::{Endpoint, NodeId};
     use iroh_willow::{
         engine::{AcceptOpts, Engine},
         form::EntryForm,
@@ -116,7 +116,7 @@ mod util {
     use tokio::task::JoinHandle;
 
     pub fn create_rng(seed: &str) -> ChaCha12Rng {
-        let seed = iroh_base::hash::Hash::new(seed);
+        let seed = iroh_blobs::Hash::new(seed);
         ChaCha12Rng::from_seed(*(seed.as_bytes()))
     }
 
@@ -129,12 +129,12 @@ mod util {
 
     impl Peer {
         pub async fn spawn(
-            secret_key: iroh_net::key::SecretKey,
+            secret_key: iroh::key::SecretKey,
             accept_opts: AcceptOpts,
         ) -> Result<Self> {
             let endpoint = Endpoint::builder()
                 .secret_key(secret_key)
-                .relay_mode(iroh_net::RelayMode::Disabled)
+                .relay_mode(iroh::RelayMode::Disabled)
                 .alpns(vec![ALPN.to_vec()])
                 .bind()
                 .await?;
@@ -182,7 +182,7 @@ mod util {
                 }
             }
             self.engine.shutdown().await?;
-            self.endpoint.close(0u8.into(), b"").await?;
+            self.endpoint.close().await?;
             Ok(())
         }
 
@@ -200,8 +200,8 @@ mod util {
 
     pub async fn spawn_two(rng: &mut impl CryptoRngCore) -> Result<[Peer; 2]> {
         let peers = [
-            iroh_net::key::SecretKey::generate_with_rng(rng),
-            iroh_net::key::SecretKey::generate_with_rng(rng),
+            iroh::key::SecretKey::generate_with_rng(rng),
+            iroh::key::SecretKey::generate_with_rng(rng),
         ]
         .map(|secret_key| Peer::spawn(secret_key, Default::default()))
         .try_join()
@@ -272,7 +272,7 @@ mod util {
 //
 // use futures_lite::StreamExt;
 // use iroh_base::key::SecretKey;
-// use iroh_net::{Endpoint, NodeAddr, NodeId};
+// use iroh::{Endpoint, NodeAddr, NodeId};
 // use rand::SeedableRng;
 // use tracing::info;
 //

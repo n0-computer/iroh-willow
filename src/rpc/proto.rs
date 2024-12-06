@@ -1,5 +1,5 @@
+use iroh::{NodeAddr, NodeId};
 use iroh_blobs::Hash;
-use iroh_net::{NodeAddr, NodeId};
 use nested_enum_utils::enum_conversions;
 use quic_rpc::pattern::try_server_streaming::StreamCreated;
 use quic_rpc_derive::rpc_requests;
