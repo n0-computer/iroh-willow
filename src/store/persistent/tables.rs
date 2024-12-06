@@ -130,13 +130,15 @@ impl redb::Key for WriteCap {
 }
 
 impl redb::Value for WriteCap {
-    type SelfType<'a> = Self
-        where
-            Self: 'a;
+    type SelfType<'a>
+        = Self
+    where
+        Self: 'a;
 
-    type AsBytes<'a> = Vec<u8>
-        where
-            Self: 'a;
+    type AsBytes<'a>
+        = Vec<u8>
+    where
+        Self: 'a;
 
     fn fixed_width() -> Option<usize> {
         None
@@ -180,13 +182,15 @@ impl redb::Key for ReadCap {
 }
 
 impl redb::Value for ReadCap {
-    type SelfType<'a> = Self
-        where
-            Self: 'a;
+    type SelfType<'a>
+        = Self
+    where
+        Self: 'a;
 
-    type AsBytes<'a> = Vec<u8>
-        where
-            Self: 'a;
+    type AsBytes<'a>
+        = Vec<u8>
+    where
+        Self: 'a;
 
     fn fixed_width() -> Option<usize> {
         None
