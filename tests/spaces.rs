@@ -69,7 +69,7 @@ async fn spawn_node(
     let addr = endpoint.node_addr().await.unwrap();
 
     let router = iroh::protocol::Router::builder(endpoint.clone())
-        .accept(iroh_willow::ALPN.to_vec(), Arc::new(engine.clone()))
+        .accept(iroh_willow::ALPN, Arc::new(engine.clone()))
         .spawn()
         .await
         .unwrap();

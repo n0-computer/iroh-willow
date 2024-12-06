@@ -180,7 +180,7 @@ impl ProtocolHandler for Engine {
 
     fn shutdown(self: Arc<Self>) -> Boxed<()> {
         Box::pin(async move {
-            (&**self).shutdown().await.ok();
+            (**self).shutdown().await.ok();
         })
     }
 }
