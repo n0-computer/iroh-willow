@@ -889,7 +889,7 @@
         <span class="kw">if </span>!<span class="self">self</span>.map.contains_key(requested_id) {
             <span class="self">self</span>.wait_for_target(shared, requested_id).<span class="kw">await</span><span class="question-mark">?</span>;
         }
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="self">self</span>.map.get_mut(requested_id).unwrap());
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.map.get_mut(requested_id).unwrap())
     }
 
     <span class="kw">async fn </span>wait_for_target&lt;S: Storage&gt;(
