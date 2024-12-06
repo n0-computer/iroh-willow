@@ -366,7 +366,7 @@
 
     <span class="kw">fn </span>shutdown(<span class="self">self</span>: Arc&lt;<span class="self">Self</span>&gt;) -&gt; Boxed&lt;()&gt; {
         Box::pin(<span class="kw">async move </span>{
-            (<span class="kw-2">&amp;**</span><span class="self">self</span>).shutdown().<span class="kw">await</span>.ok();
+            (<span class="kw-2">**</span><span class="self">self</span>).shutdown().<span class="kw">await</span>.ok();
         })
     }
 }
