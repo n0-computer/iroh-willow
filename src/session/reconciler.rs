@@ -249,7 +249,7 @@ impl TargetMap {
         if !self.map.contains_key(requested_id) {
             self.wait_for_target(shared, requested_id).await?;
         }
-        return Ok(self.map.get_mut(requested_id).unwrap());
+        Ok(self.map.get_mut(requested_id).unwrap())
     }
 
     async fn wait_for_target<S: Storage>(

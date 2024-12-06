@@ -2,8 +2,8 @@ use std::{collections::BTreeMap, sync::Arc, time::Duration};
 
 use anyhow::ensure;
 use futures_lite::StreamExt;
+use iroh::{key::SecretKey, Endpoint, NodeAddr};
 use iroh_io::AsyncSliceReaderExt;
-use iroh_net::{key::SecretKey, Endpoint, NodeAddr};
 use iroh_willow::{
     engine::AcceptOpts,
     interest::{AreaOfInterestSelector, CapSelector, DelegateTo, RestrictArea},
@@ -23,7 +23,7 @@ use test_strategy::proptest;
 use testresult::TestResult;
 use tracing::{error, info};
 
-/// Spawn an iroh node in a separate thread and tokio runtime, and return
+/// Spawn an iroh node and tokio runtime, and return
 /// the address and client.
 async fn spawn_node(
     persist_test_mode: bool,
@@ -31,7 +31,7 @@ async fn spawn_node(
     NodeAddr,
     Client,
     iroh_blobs::store::mem::Store,
-    iroh_router::Router,
+    iroh::protocol::Router,
 ) {
     let blobs_store = iroh_blobs::store::mem::Store::default();
 
@@ -39,7 +39,7 @@ async fn spawn_node(
     let endpoint = Endpoint::builder()
         .secret_key(secret_key)
         .alpns(vec![iroh_willow::ALPN.to_vec()])
-        .relay_mode(iroh_net::RelayMode::Disabled)
+        .relay_mode(iroh::RelayMode::Disabled)
         .bind()
         .await
         .unwrap();
@@ -68,8 +68,8 @@ async fn spawn_node(
     // endpoint.direct_addresses().next().await;
     let addr = endpoint.node_addr().await.unwrap();
 
-    let router = iroh_router::Router::builder(endpoint.clone())
-        .accept(iroh_willow::ALPN.to_vec(), Arc::new(engine.clone()))
+    let router = iroh::protocol::Router::builder(endpoint.clone())
+        .accept(iroh_willow::ALPN, Arc::new(engine.clone()))
         .spawn()
         .await
         .unwrap();

@@ -8,11 +8,11 @@ use futures_util::{
     future::{MapErr, Shared},
     FutureExt, TryFutureExt,
 };
-use iroh_net::{
+use iroh::{
     endpoint::{Connecting, Connection},
+    protocol::ProtocolHandler,
     Endpoint, NodeId,
 };
-use iroh_router::ProtocolHandler;
 use tokio::{
     sync::{mpsc, oneshot},
     task::JoinError,
@@ -180,7 +180,7 @@ impl ProtocolHandler for Engine {
 
     fn shutdown(self: Arc<Self>) -> Boxed<()> {
         Box::pin(async move {
-            (&**self).shutdown().await.ok();
+            (**self).shutdown().await.ok();
         })
     }
 }

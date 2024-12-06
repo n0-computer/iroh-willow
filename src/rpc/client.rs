@@ -19,9 +19,9 @@ use anyhow::{anyhow, Result};
 use bytes::Bytes;
 use futures_lite::{Stream, StreamExt};
 use futures_util::{Sink, SinkExt};
+use iroh::NodeAddr;
 use iroh_base::key::NodeId;
 use iroh_blobs::Hash;
-use iroh_net::NodeAddr;
 use quic_rpc::transport::ConnectionErrors;
 use ref_cast::RefCast;
 use serde::{Deserialize, Serialize};
@@ -184,7 +184,7 @@ impl<C: quic_rpc::Connector<RpcService>> Client<C> {
 
     /// Fetches the [`NodeAddr`] for this node.
     ///
-    /// See also [`Endpoint::node_addr`](iroh_net::Endpoint::node_addr).
+    /// See also [`Endpoint::node_addr`](iroh::Endpoint::node_addr).
     pub async fn node_addr(&self) -> Result<NodeAddr> {
         let addr = self.rpc.rpc(AddrRequest).await??;
         Ok(addr)
@@ -192,7 +192,7 @@ impl<C: quic_rpc::Connector<RpcService>> Client<C> {
 
     /// Adds a known node address to this node.
     ///
-    /// See also [`Endpoint::add_node_addr`](iroh_net::Endpoint::add_node_addr).
+    /// See also [`Endpoint::add_node_addr`](iroh::Endpoint::add_node_addr).
     pub async fn add_node_addr(&self, addr: NodeAddr) -> Result<()> {
         self.rpc.rpc(AddAddrRequest { addr }).await??;
         Ok(())

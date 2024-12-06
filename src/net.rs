@@ -5,9 +5,11 @@ use std::{future::Future, io, time::Duration};
 use anyhow::{anyhow, ensure, Context as _, Result};
 use futures_concurrency::future::TryJoin;
 use futures_util::future::TryFutureExt;
-use iroh_base::key::NodeId;
-use iroh_net::endpoint::{
-    Connection, ConnectionError, ReadError, ReadExactError, RecvStream, SendStream, VarInt,
+use iroh::{
+    endpoint::{
+        Connection, ConnectionError, ReadError, ReadExactError, RecvStream, SendStream, VarInt,
+    },
+    NodeId,
 };
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing::{debug, trace};
@@ -414,8 +416,8 @@ mod tests {
 
     use anyhow::Result;
     use futures_lite::StreamExt;
+    use iroh::{endpoint::Connection, Endpoint, NodeAddr, NodeId};
     use iroh_base::key::SecretKey;
-    use iroh_net::{endpoint::Connection, Endpoint, NodeAddr, NodeId};
     use rand::SeedableRng;
     use rand_chacha::ChaCha12Rng;
     use tracing::{info, Instrument};
@@ -439,7 +441,7 @@ mod tests {
     const ALPN: &[u8] = b"iroh-willow/0";
 
     fn create_rng(seed: &str) -> ChaCha12Rng {
-        let seed = iroh_base::hash::Hash::new(seed);
+        let seed = iroh_blobs::Hash::new(seed);
         rand_chacha::ChaCha12Rng::from_seed(*(seed.as_bytes()))
     }
 
@@ -451,7 +453,7 @@ mod tests {
         our_nonce: AccessChallenge,
         intents: Vec<Intent>,
     ) -> Result<(SessionHandle, tokio::task::JoinHandle<Result<()>>)> {
-        let peer = iroh_net::endpoint::get_remote_node_id(&conn)?;
+        let peer = iroh::endpoint::get_remote_node_id(&conn)?;
         let span = tracing::error_span!("conn", me=%me.fmt_short(), peer=%peer.fmt_short());
         let (initial_transmission, channel_streams) = establish(&conn, our_role, our_nonce)
             .instrument(span.clone())
@@ -782,7 +784,7 @@ mod tests {
     ) -> Result<(Endpoint, NodeId, NodeAddr)> {
         let ep = Endpoint::builder()
             .secret_key(SecretKey::generate_with_rng(rng))
-            .relay_mode(iroh_net::RelayMode::Disabled)
+            .relay_mode(iroh::RelayMode::Disabled)
             .alpns(vec![ALPN.to_vec()])
             .bind()
             .await?;

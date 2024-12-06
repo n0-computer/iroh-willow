@@ -1,6 +1,6 @@
 //! Types for the basic data model of Willow.
 
-use iroh_base::hash::Hash;
+use iroh_blobs::Hash;
 use ufotofu::sync::{consumer::IntoVec, producer::FromSlice};
 pub use willow_data_model::{InvalidPathError, UnauthorisedWriteError};
 use willow_encoding::sync::{Decodable, Encodable};
