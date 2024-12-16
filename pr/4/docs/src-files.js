@@ -1,0 +1,4 @@
+var srcIndex = new Map(JSON.parse('[\
+["iroh_willow",["",[["engine",[],["actor.rs","peer_manager.rs"]],["proto",[["wgps",[],["challenge.rs","channels.rs","fingerprint.rs","handles.rs","messages.rs"]]],["data_model.rs","grouping.rs","keys.rs","meadowcap.rs","pai.rs","wgps.rs"]],["rpc",[],["client.rs","handler.rs","proto.rs"]],["session",[],["aoi_finder.rs","capabilities.rs","challenge.rs","channels.rs","data.rs","error.rs","intents.rs","pai_finder.rs","payload.rs","reconciler.rs","resource.rs","run.rs","static_tokens.rs"]],["store",[["persistent",[],["tables.rs"]]],["auth.rs","memory.rs","persistent.rs","traits.rs","willow_store_glue.rs"]],["util",[],["channel.rs","codec.rs","codec2.rs","gen_stream.rs","pipe.rs","queue.rs","stream.rs","time.rs"]]],["engine.rs","form.rs","interest.rs","lib.rs","net.rs","proto.rs","rpc.rs","session.rs","store.rs","util.rs"]]]\
+]'));
+createSrcSidebar();
