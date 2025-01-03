@@ -293,7 +293,7 @@ impl FromStr for UserPublicKey {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Self::from_bytes(
             &data_encoding::BASE32_NOPAD
-                .decode(&s.as_ref())
+                .decode(s.as_ref())
                 .map_err(|_| anyhow!("Failed to decode base32: {s}"))?
                 .try_into()
                 .map_err(|s: Vec<u8>| {
