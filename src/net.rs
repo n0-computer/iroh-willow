@@ -416,8 +416,7 @@ mod tests {
 
     use anyhow::Result;
     use futures_lite::StreamExt;
-    use iroh::{endpoint::Connection, Endpoint, NodeAddr, NodeId};
-    use iroh_base::key::SecretKey;
+    use iroh::{endpoint::Connection, Endpoint, NodeAddr, NodeId, SecretKey};
     use rand::SeedableRng;
     use rand_chacha::ChaCha12Rng;
     use tracing::{info, Instrument};
@@ -783,7 +782,7 @@ mod tests {
         rng: &mut rand_chacha::ChaCha12Rng,
     ) -> Result<(Endpoint, NodeId, NodeAddr)> {
         let ep = Endpoint::builder()
-            .secret_key(SecretKey::generate_with_rng(rng))
+            .secret_key(SecretKey::generate(rng))
             .relay_mode(iroh::RelayMode::Disabled)
             .alpns(vec![ALPN.to_vec()])
             .bind()

@@ -4,7 +4,7 @@ use anyhow::Result;
 use bytes::Bytes;
 use futures_concurrency::future::TryJoin;
 use futures_lite::StreamExt;
-use iroh::key::SecretKey;
+use iroh::SecretKey;
 use iroh_blobs::store::{Map, MapEntry};
 use iroh_io::AsyncSliceReaderExt;
 use iroh_willow::{
@@ -287,7 +287,7 @@ async fn read_back_write() -> Result<()> {
     iroh_test::logging::setup_multithreaded();
     let mut rng = create_rng("read_back_write");
 
-    let alfie = Peer::spawn(SecretKey::generate_with_rng(&mut rng), Default::default()).await?;
+    let alfie = Peer::spawn(SecretKey::generate(&mut rng), Default::default()).await?;
 
     let user_alfie = alfie.create_user().await?;
     let namespace_id = alfie
@@ -404,10 +404,7 @@ mod util {
     }
 
     impl Peer {
-        pub async fn spawn(
-            secret_key: iroh::key::SecretKey,
-            accept_opts: AcceptOpts,
-        ) -> Result<Self> {
+        pub async fn spawn(secret_key: iroh::SecretKey, accept_opts: AcceptOpts) -> Result<Self> {
             let endpoint = Endpoint::builder()
                 .secret_key(secret_key)
                 .relay_mode(iroh::RelayMode::Disabled)
@@ -476,10 +473,10 @@ mod util {
         }
     }
 
-    pub async fn spawn_two(rng: &mut impl CryptoRngCore) -> Result<[Peer; 2]> {
+    pub async fn spawn_two(mut rng: &mut impl CryptoRngCore) -> Result<[Peer; 2]> {
         let peers = [
-            iroh::key::SecretKey::generate_with_rng(rng),
-            iroh::key::SecretKey::generate_with_rng(rng),
+            iroh::SecretKey::generate(&mut rng),
+            iroh::SecretKey::generate(&mut rng),
         ]
         .map(|secret_key| Peer::spawn(secret_key, Default::default()))
         .try_join()

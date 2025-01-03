@@ -1,4 +1,3 @@
-use iroh_base::base32::fmt_short;
 use iroh_blobs::Hash;
 use rand::Rng;
 use rand_core::CryptoRngCore;
@@ -10,7 +9,9 @@ pub const CHALLENGE_LENGTH: usize = 32;
 pub const CHALLENGE_HASH_LENGTH: usize = DIGEST_LENGTH;
 
 #[derive(derive_more::Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub struct ChallengeHash(#[debug("{}..", fmt_short(self.0))] [u8; CHALLENGE_HASH_LENGTH]);
+pub struct ChallengeHash(
+    #[debug("{}..", data_encoding::HEXLOWER.encode(&self.0))] [u8; CHALLENGE_HASH_LENGTH],
+);
 
 impl ChallengeHash {
     pub fn as_bytes(&self) -> &[u8] {
@@ -23,7 +24,9 @@ impl ChallengeHash {
 }
 
 #[derive(derive_more::Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq)]
-pub struct AccessChallenge(#[debug("{}..", fmt_short(self.0))] AccessChallengeBytes);
+pub struct AccessChallenge(
+    #[debug("{}..", data_encoding::HEXLOWER.encode(&self.0))] AccessChallengeBytes,
+);
 
 pub type AccessChallengeBytes = [u8; CHALLENGE_LENGTH];
 

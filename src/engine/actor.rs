@@ -2,7 +2,7 @@ use std::{sync::Arc, thread::JoinHandle};
 
 use anyhow::Result;
 use futures_lite::{stream::Stream, StreamExt};
-use iroh_base::key::NodeId;
+use iroh::NodeId;
 use tokio::{
     sync::{mpsc, oneshot},
     task::JoinSet,

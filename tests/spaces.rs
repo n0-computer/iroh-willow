@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, sync::Arc, time::Duration};
 
 use anyhow::ensure;
 use futures_lite::StreamExt;
-use iroh::{key::SecretKey, Endpoint, NodeAddr};
+use iroh::{Endpoint, NodeAddr, SecretKey};
 use iroh_io::AsyncSliceReaderExt;
 use iroh_willow::{
     engine::AcceptOpts,
@@ -35,7 +35,7 @@ async fn spawn_node(
 ) {
     let blobs_store = iroh_blobs::store::mem::Store::default();
 
-    let secret_key = SecretKey::generate();
+    let secret_key = SecretKey::generate(rand::rngs::OsRng);
     let endpoint = Endpoint::builder()
         .secret_key(secret_key)
         .alpns(vec![iroh_willow::ALPN.to_vec()])

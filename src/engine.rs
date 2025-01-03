@@ -174,13 +174,16 @@ impl std::ops::Deref for Engine {
 }
 
 impl ProtocolHandler for Engine {
-    fn accept(self: Arc<Self>, conn: Connecting) -> Boxed<Result<()>> {
-        Box::pin(async move { self.handle_connection(conn.await?).await })
+    fn accept(&self, conn: Connecting) -> Boxed<Result<()>> {
+        let this = self.clone();
+        async move { this.handle_connection(conn.await?).await }.boxed()
     }
 
-    fn shutdown(self: Arc<Self>) -> Boxed<()> {
-        Box::pin(async move {
-            (**self).shutdown().await.ok();
-        })
+    fn shutdown(&self) -> Boxed<()> {
+        let this = self.clone();
+        async move {
+            crate::engine::Engine::shutdown(&this).await.ok();
+        }
+        .boxed()
     }
 }

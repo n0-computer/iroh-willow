@@ -74,7 +74,11 @@ impl LiftingCommutativeMonoid<PointRef<IrohWillowParams>, StoredAuthorisedEntry>
 
 impl fmt::Debug for Fingerprint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Fingerprint({})", iroh_base::base32::fmt_short(self.0))
+        write!(
+            f,
+            "Fingerprint({})",
+            data_encoding::HEXLOWER.encode(&self.0[..10])
+        )
     }
 }
 
