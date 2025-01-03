@@ -7,9 +7,9 @@
 
 use std::{cmp::Ordering, fmt, str::FromStr};
 
+use anyhow::anyhow;
 use derive_more::{AsRef, Deref, From, Into};
 use ed25519_dalek::{SignatureError, Signer, SigningKey, Verifier, VerifyingKey};
-use iroh_base::base32;
 use rand_core::CryptoRngCore;
 use serde::{Deserialize, Serialize};
 use willow_store::{FixedSize, IsLowerBound, LowerBound};
@@ -27,16 +27,16 @@ macro_rules! bytestring {
             /// Length of the byte encoding of [`Self`].
             pub const LENGTH: usize = $n;
 
-            /// Convert to a base32 string limited to the first 10 bytes for a friendly string
+            /// Convert to a hex string limited to the first 10 bytes for a friendly string
             /// representation of the key.
             pub fn fmt_short(&self) -> String {
-                base32::fmt_short(&self.to_bytes())
+                data_encoding::HEXLOWER.encode(&(self.to_bytes()[..10]))
             }
         }
 
         impl fmt::Display for $ty {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                write!(f, "{}", base32::fmt(&self.to_bytes()))
+                write!(f, "{}", data_encoding::HEXLOWER.encode(&self.to_bytes()))
             }
         }
 
@@ -253,7 +253,18 @@ impl FromStr for UserSecretKey {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self::from_bytes(&base32::parse_array(s)?))
+        Ok(Self::from_bytes(
+            &data_encoding::BASE32_NOPAD
+                .decode(s.as_ref())
+                .map_err(|_| anyhow!("Failed to decode base32: {s}"))?
+                .try_into()
+                .map_err(|s: Vec<u8>| {
+                    anyhow!(
+                        "Incorrect size for UserSecretKey, expected 32 bytes, got {}",
+                        s.len()
+                    )
+                })?,
+        ))
     }
 }
 
@@ -261,7 +272,18 @@ impl FromStr for NamespaceSecretKey {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self::from_bytes(&base32::parse_array(s)?))
+        Ok(Self::from_bytes(
+            &data_encoding::BASE32_NOPAD
+                .decode(s.as_ref())
+                .map_err(|_| anyhow!("Failed to decode base32: {s}"))?
+                .try_into()
+                .map_err(|s: Vec<u8>| {
+                    anyhow!(
+                        "Incorrect size for NamespaceSecretKey, expected 32 bytes, got {}",
+                        s.len()
+                    )
+                })?,
+        ))
     }
 }
 
@@ -269,7 +291,18 @@ impl FromStr for UserPublicKey {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::from_bytes(&base32::parse_array(s)?).map_err(Into::into)
+        Ok(Self::from_bytes(
+            &data_encoding::BASE32_NOPAD
+                .decode(s.as_ref())
+                .map_err(|_| anyhow!("Failed to decode base32: {s}"))?
+                .try_into()
+                .map_err(|s: Vec<u8>| {
+                    anyhow!(
+                        "Incorrect size for UserPublicKey, expected 32 bytes, got {}",
+                        s.len()
+                    )
+                })?,
+        )?)
     }
 }
 
@@ -277,7 +310,18 @@ impl FromStr for NamespacePublicKey {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::from_bytes(&base32::parse_array(s)?).map_err(Into::into)
+        Ok(Self::from_bytes(
+            &data_encoding::BASE32_NOPAD
+                .decode(s.as_ref())
+                .map_err(|_| anyhow!("Failed to decode base32: {s}"))?
+                .try_into()
+                .map_err(|s: Vec<u8>| {
+                    anyhow!(
+                        "Incorrect size for NamespacePublicKey, expected 32 bytes, got {}",
+                        s.len()
+                    )
+                })?,
+        )?)
     }
 }
 

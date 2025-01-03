@@ -128,10 +128,7 @@ mod util {
     }
 
     impl Peer {
-        pub async fn spawn(
-            secret_key: iroh::key::SecretKey,
-            accept_opts: AcceptOpts,
-        ) -> Result<Self> {
+        pub async fn spawn(secret_key: iroh::SecretKey, accept_opts: AcceptOpts) -> Result<Self> {
             let endpoint = Endpoint::builder()
                 .secret_key(secret_key)
                 .relay_mode(iroh::RelayMode::Disabled)
@@ -198,10 +195,10 @@ mod util {
         }
     }
 
-    pub async fn spawn_two(rng: &mut impl CryptoRngCore) -> Result<[Peer; 2]> {
+    pub async fn spawn_two(mut rng: &mut impl CryptoRngCore) -> Result<[Peer; 2]> {
         let peers = [
-            iroh::key::SecretKey::generate_with_rng(rng),
-            iroh::key::SecretKey::generate_with_rng(rng),
+            iroh::SecretKey::generate(&mut rng),
+            iroh::SecretKey::generate(&mut rng),
         ]
         .map(|secret_key| Peer::spawn(secret_key, Default::default()))
         .try_join()

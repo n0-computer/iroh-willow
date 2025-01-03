@@ -272,7 +272,7 @@ impl From<IntersectionMessage> for Message {
 #[derive(Serialize, Deserialize, PartialEq, Eq, derive_more::Debug)]
 pub struct CommitmentReveal {
     /// The nonce of the sender, encoded as a big-endian unsigned integer.
-    #[debug("{}..", iroh_base::base32::fmt_short(self.nonce.as_bytes()))]
+    #[debug("{}..", data_encoding::HEXLOWER.encode(&self.nonce.as_bytes()[..10]))]
     pub nonce: AccessChallenge,
 }
 
