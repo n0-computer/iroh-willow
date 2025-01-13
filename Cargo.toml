@@ -57,7 +57,7 @@ tracing = "0.1"
 ufotofu = { version = "0.4.1", features = ["std"] }
 willow-data-model = "0.1.0"
 willow-encoding = "0.1.0"
-willow-store = { git = "https://github.com/n0-computer/willow-store.git", branch = "matheus23/redb-ref" }
+willow-store = { git = "https://github.com/n0-computer/willow-store.git", branch = "main" }
 zerocopy = { version = "0.7", features = ["derive"] }
 zerocopy-derive = "0.7"
 data-encoding = "2.6.0"
