@@ -5168,7 +5168,7 @@ dependencies = [
 [[package]]
 name = "willow-store"
 version = "0.1.0"
-source = "git+https://github.com/n0-computer/willow-store.git?branch=matheus23/redb-ref#3a29c592fe071ff87fa763bd4650bfed789a53e6"
+source = "git+https://github.com/n0-computer/willow-store.git?branch=main#f7c44af52e06605543d7e403aa57aeb9e1afd087"
 dependencies = [
  "anyhow",
  "blake3",
