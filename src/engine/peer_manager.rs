@@ -5,7 +5,7 @@ use futures_buffered::join_all;
 use futures_lite::{future::Boxed, StreamExt};
 use futures_util::{FutureExt, TryFutureExt};
 use iroh::{
-    endpoint::{get_remote_node_id, Connection, ConnectionError},
+    endpoint::{Connection, ConnectionError},
     Endpoint, NodeId,
 };
 use tokio::{
@@ -201,7 +201,7 @@ impl PeerManager {
 
     /// Handle a new incoming connection.
     async fn handle_connection(&mut self, conn: Connection) {
-        let peer = match get_remote_node_id(&conn) {
+        let peer = match (&conn).remote_node_id() {
             Ok(peer) => peer,
             Err(err) => {
                 debug!("ignore incoming connection (failed to get remote node id: {err})");
