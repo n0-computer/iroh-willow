@@ -452,7 +452,7 @@ mod tests {
         our_nonce: AccessChallenge,
         intents: Vec<Intent>,
     ) -> Result<(SessionHandle, tokio::task::JoinHandle<Result<()>>)> {
-        let peer = (&conn).remote_node_id()?;
+        let peer = conn.remote_node_id()?;
         let span = tracing::error_span!("conn", me=%me.fmt_short(), peer=%peer.fmt_short());
         let (initial_transmission, channel_streams) = establish(&conn, our_role, our_nonce)
             .instrument(span.clone())

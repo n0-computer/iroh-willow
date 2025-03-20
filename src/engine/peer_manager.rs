@@ -201,7 +201,7 @@ impl PeerManager {
 
     /// Handle a new incoming connection.
     async fn handle_connection(&mut self, conn: Connection) {
-        let peer = match (&conn).remote_node_id() {
+        let peer = match conn.remote_node_id() {
             Ok(peer) => peer,
             Err(err) => {
                 debug!("ignore incoming connection (failed to get remote node id: {err})");
