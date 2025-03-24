@@ -30,7 +30,7 @@ use crate::proto::{
     zerocopy_derive::AsBytes,
     zerocopy_derive::FromZeroes,
 )]
-#[repr(packed)]
+#[repr(C, packed)]
 pub(crate) struct StoredAuthorisedEntry {
     pub(crate) authorisation_token_id: ed25519::SignatureBytes,
     pub(crate) payload_digest: [u8; 32],
@@ -103,7 +103,7 @@ impl StoredAuthorisedEntry {
     zerocopy_derive::AsBytes,
     zerocopy_derive::FromZeroes,
 )]
-#[repr(packed)]
+#[repr(C, packed)]
 pub(crate) struct StoredTimestamp([u8; 8]);
 
 impl LowerBound for StoredTimestamp {
