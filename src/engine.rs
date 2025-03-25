@@ -8,11 +8,7 @@ use futures_util::{
     future::{MapErr, Shared},
     FutureExt, TryFutureExt,
 };
-use iroh::{
-    endpoint::{Connecting, Connection},
-    protocol::ProtocolHandler,
-    Endpoint, NodeId,
-};
+use iroh::{endpoint::Connection, protocol::ProtocolHandler, Endpoint, NodeId};
 use tokio::{
     sync::{mpsc, oneshot},
     task::JoinError,
@@ -174,9 +170,9 @@ impl std::ops::Deref for Engine {
 }
 
 impl ProtocolHandler for Engine {
-    fn accept(&self, conn: Connecting) -> Boxed<Result<()>> {
+    fn accept(&self, conn: Connection) -> Boxed<Result<()>> {
         let this = self.clone();
-        async move { this.handle_connection(conn.await?).await }.boxed()
+        async move { this.handle_connection(conn).await }.boxed()
     }
 
     fn shutdown(&self) -> Boxed<()> {
