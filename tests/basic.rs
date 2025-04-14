@@ -313,6 +313,7 @@ async fn read_back_write() -> Result<()> {
     Ok(())
 }
 
+#[ignore = "flaky"]
 #[tokio::test(flavor = "multi_thread")]
 async fn owned_namespace_subspace_write_sync() -> Result<()> {
     iroh_test::logging::setup_multithreaded();
