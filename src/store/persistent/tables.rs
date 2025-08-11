@@ -58,7 +58,7 @@ impl OpenWrite {
         })
     }
 
-    pub fn read(&self) -> &Tables {
+    pub fn read(&self) -> &Tables<'_> {
         self.inner.borrow_dependent()
     }
 
