@@ -1,7 +1,7 @@
 <h1 align="center"><a href="https://iroh.computer"><img alt="iroh" src="./.img/iroh_wordmark.svg" width="100" /></a></h1>
 
 <h3 align="center">
-A minimal implementation of Willow, Meadowcap, and WGPS with iroh
+A minimal implementation of Willow, Meadowcap, and [Confidential Sync](https://willowprotocol.org/specs/confidential-sync/index.html) with iroh
 </h3>
 
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square)](https://docs.rs/iroh-willow/)
