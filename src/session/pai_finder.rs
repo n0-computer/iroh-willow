@@ -14,7 +14,7 @@ use std::collections::{HashMap, HashSet};
 
 use anyhow::Result;
 use futures_lite::{Stream, StreamExt};
-use tracing::{debug, trace};
+use tracing::trace;
 
 use crate::{
     proto::{
