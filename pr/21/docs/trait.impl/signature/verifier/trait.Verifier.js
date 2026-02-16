@@ -1,9 +1,0 @@
-(function() {
-    var implementors = Object.fromEntries([["iroh_willow",[["impl Verifier&lt;<a class=\"struct\" href=\"iroh_willow/proto/keys/struct.NamespaceSignature.html\" title=\"struct iroh_willow::proto::keys::NamespaceSignature\">NamespaceSignature</a>&gt; for <a class=\"struct\" href=\"iroh_willow/proto/keys/struct.NamespaceId.html\" title=\"struct iroh_willow::proto::keys::NamespaceId\">NamespaceId</a>"],["impl Verifier&lt;<a class=\"struct\" href=\"iroh_willow/proto/keys/struct.NamespaceSignature.html\" title=\"struct iroh_willow::proto::keys::NamespaceSignature\">NamespaceSignature</a>&gt; for <a class=\"struct\" href=\"iroh_willow/proto/keys/struct.NamespacePublicKey.html\" title=\"struct iroh_willow::proto::keys::NamespacePublicKey\">NamespacePublicKey</a>"],["impl Verifier&lt;<a class=\"struct\" href=\"iroh_willow/proto/keys/struct.UserSignature.html\" title=\"struct iroh_willow::proto::keys::UserSignature\">UserSignature</a>&gt; for <a class=\"struct\" href=\"iroh_willow/proto/keys/struct.UserId.html\" title=\"struct iroh_willow::proto::keys::UserId\">UserId</a>"],["impl Verifier&lt;<a class=\"struct\" href=\"iroh_willow/proto/keys/struct.UserSignature.html\" title=\"struct iroh_willow::proto::keys::UserSignature\">UserSignature</a>&gt; for <a class=\"struct\" href=\"iroh_willow/proto/keys/struct.UserPublicKey.html\" title=\"struct iroh_willow::proto::keys::UserPublicKey\">UserPublicKey</a>"]]]]);
-    if (window.register_implementors) {
-        window.register_implementors(implementors);
-    } else {
-        window.pending_implementors = implementors;
-    }
-})()
-//{"start":57,"fragment_lengths":[1375]}
